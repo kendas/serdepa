@@ -14,76 +14,19 @@ from serdepa.exceptions import PacketDefinitionError
 
 
 class FieldsTester(unittest.TestCase):
-    def test_duplicate_field_name(self):
-        with self.assertRaises(PacketDefinitionError):
-            class TestPacket(SerdepaPacket):
-                _fields_ = (
-                    ('testfield', nx_uint8),
-                    ('testfield', nx_uint64)
-                )
-        class TestPacket(SerdepaPacket):
-            _fields_ = (
-                ('testfield1', nx_uint8),
-                ('testfield2', nx_uint64)
-            )
-
     def test_length_default_value(self):
         with self.assertRaises(PacketDefinitionError):
             class TestPacket(SerdepaPacket):
-                _fields_ = (
-                    ('length_field', Length(nx_uint8, 'list_field'), 5),
-                    ('list_field', List(nx_uint8))
-                )
+                length_field = Length(nx_uint8(default=5), 'list_field')
+                list_field = List(nx_uint8)
         class TestPacket(SerdepaPacket):
-            _fields_ = (
-                ('length_field', Length(nx_uint8, 'list_field')),
-                ('list_field', List(nx_uint8))
-            )
-
-    def test_missing_field_type(self):
-        with self.assertRaises(PacketDefinitionError):
-            class TestPacket(SerdepaPacket):
-                _fields_ = [
-                    ['testfield']
-                ]
-        class TestPacket(SerdepaPacket):
-            _fields_ = [
-                ['testfield', nx_uint8]
-            ]
-
-    def test_invalid_field_type(self):
-        with self.assertRaises(PacketDefinitionError):
-            class TestPacket(SerdepaPacket):
-                _fields_ = [
-                    ['testfield', int]
-                ]
-        class TestPacket(SerdepaPacket):
-            _fields_ = [
-                ['testfield', nx_int16]
-            ]
+                length_field = Length(nx_uint8, 'list_field')
+                list_field = List(nx_uint8)
 
     def test_undefined_length_list(self):
         with self.assertRaises(PacketDefinitionError):
             class TestPacket(SerdepaPacket):
-                _fields_ = (
-                    ('testfield', List(nx_int8)),
-                    ('testfield2', nx_uint8)
-                )
+                testfield = List(nx_int8)
+                testfield2 = nx_uint8()
         class TestPacket(SerdepaPacket):
-            _fields_ = (
-                ('testfield', List(nx_int8)),
-            )
-
-    def test_existing_property(self):
-        with self.assertRaises(PacketDefinitionError):
-            class TestPacket(SerdepaPacket):
-                _fields_ = (
-                    ('testfield', nx_int8),
-                    ('testfield2', nx_uint8),
-                )
-                testfield2 = 1
-        class TestPacket(SerdepaPacket):
-            _fields_ = (
-                ('testfield', nx_int8),
-                ('testfield2', nx_uint8),
-            )
+            testfield2 = nx_uint8()

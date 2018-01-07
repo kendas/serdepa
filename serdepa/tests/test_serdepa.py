@@ -18,87 +18,69 @@ __license__ = "MIT"
 
 
 class PointStruct(SerdepaPacket):
-    _fields_ = [
-        ("x", nx_int32),
-        ("y", nx_int32)
-    ]
+    x = nx_int32()
+    y = nx_int32()
 
 
 class OnePacket(SerdepaPacket):
-    _fields_ = [
-        ("header", nx_uint8),
-        ("timestamp", nx_uint32),
-        ("length", Length(nx_uint8, "data")),
-        ("data", List(nx_uint8)),
-        ("tail", List(nx_uint8))
-    ]
+    header = nx_uint8()
+    timestamp = nx_uint32()
+    length = Length(nx_uint8, "data")
+    data = List(nx_uint8)
+    tail = List(nx_uint8)
 
 
 class DefaultValuePacket(SerdepaPacket):
-    _fields_ = [
-        ("header", nx_uint8, 1),
-        ("timestamp", nx_uint32, 12345),
-        ("length", Length(nx_uint8, "data")),
-        ("data", List(nx_uint8), [1, 2, 3, 4]),
-        ("tail", List(nx_uint8), [5, 6])
-    ]
+    header = nx_uint8(default=1)
+    timestamp = nx_uint32(default=12345)
+    length = Length(nx_uint8, "data")
+    data = List(nx_uint8, default=[1, 2, 3, 4])
+    tail = List(nx_uint8, default=[5, 6])
 
 
 class AnotherPacket(SerdepaPacket):
-    _fields_ = [
-        ("header", nx_uint8),
-        ("timestamp", nx_uint32),
-        ("origin", PointStruct),
-        ("points", Length(nx_uint8, "data")),
-        ("data", List(PointStruct))
-    ]
+    header = nx_uint8()
+    timestamp = nx_uint32()
+    origin = PointStruct()
+    points = Length(nx_uint8, "data")
+    data = List(PointStruct)
 
 
 class ArrayPacket(SerdepaPacket):
-    _fields_ = [
-        ("header", nx_uint8),
-        ("data", Array(PointStruct, 4))
-    ]
+    header = nx_uint8()
+    data = Array(PointStruct, 4)
 
 
 class SimpleArray(SerdepaPacket):
-    _fields_ = [
-        ("data", Array(nx_uint8, 10))
-    ]
+    data = Array(nx_uint8, 10)
 
 
 class MyNodes(SerdepaPacket):
-    _fields_ = [
-        ("nodeId", nx_uint16),
-        ("attr", nx_int16),
-        ("inQlty", nx_uint8),
-        ("outQlty", nx_uint8),
-        ("qlty", nx_uint8),
-        ("lifetime", nx_uint8)
-    ]
+    nodeId = nx_uint16()
+    attr = nx_int16()
+    inQlty = nx_uint8()
+    outQlty = nx_uint8()
+    qlty = nx_uint8()
+    lifetime = nx_uint8()
 
 
 class MyRouters(SerdepaPacket):
-    _fields_ = [
-        ("beatId", nx_uint32),
-        ("routerId", nx_uint16),
-        ("partnerId", nx_uint16),
-        ("attr", nx_uint16),
-        ("qlty", nx_uint8),
-        ("lifetime", nx_uint8),
-        ("flags", nx_uint8),
-    ]
+    beatId = nx_uint32()
+    routerId = nx_uint16()
+    partnerId = nx_uint16()
+    attr = nx_uint16()
+    qlty = nx_uint8()
+    lifetime = nx_uint8()
+    flags = nx_uint8()
 
 
 class BeatRecord(SerdepaPacket):
-    _fields_ = [
-        ("clockstamp", nx_uint32),
-        ("nodes_in_beat", Length(nx_uint8, "nodes")),
-        ("beats_in_cycle", Length(nx_uint8, "routers")),
-        ("my_beat_id", nx_uint32),
-        ("nodes", List(MyNodes)),
-        ("routers", List(MyRouters))
-    ]
+    clockstamp = nx_uint32()
+    nodes_in_beat = Length(nx_uint8, "nodes")
+    beats_in_cycle = Length(nx_uint8, "routers")
+    my_beat_id = nx_uint32()
+    nodes = List(MyNodes)
+    routers = List(MyRouters)
 
 
 class TransformTester(unittest.TestCase):
@@ -118,8 +100,7 @@ class TransformTester(unittest.TestCase):
         self.assertEqual(p.serialize(), decode(self.p1, "hex"))
 
     def test_two(self):
-        p = OnePacket()
-        p.deserialize(decode(self.p1, "hex"))
+        p = OnePacket.deserialize(decode(self.p1, "hex"))
 
         self.assertEqual(p.header, 1)
         self.assertEqual(p.timestamp, 12345)
@@ -134,8 +115,7 @@ class EmptyTailTester(unittest.TestCase):
     p1 = "01000030390401020304"
 
     def test_empty_tail_deserialize(self):
-        p = OnePacket()
-        p.deserialize(decode(self.p1, "hex"))
+        p = OnePacket.deserialize(decode(self.p1, "hex"))
 
         self.assertEqual(p.header, 1)
         self.assertEqual(p.timestamp, 12345)
@@ -188,8 +168,7 @@ class ArrayTester(unittest.TestCase):
         self.assertEqual(p.serialize(), decode(self.a2, "hex"))
 
     def test_single_array_deserialize(self):
-        p = ArrayPacket()
-        p.deserialize(decode(self.a2, "hex"))
+        p = ArrayPacket.deserialize(decode(self.a2, "hex"))
 
         self.assertEqual(p.header, 0)
         self.assertEqual(len(p.data), 4)
@@ -226,8 +205,7 @@ class TestHourlyReport(unittest.TestCase):
     )
 
     def test_hourly_deserialize(self):
-        r = BeatRecord()
-        r.deserialize(decode(self.report, "hex"))
+        r = BeatRecord.deserialize(decode(self.report, "hex"))
 
         self.assertEqual(r.nodes_in_beat, 7)
         self.assertEqual(r.beats_in_cycle, 13)
@@ -262,8 +240,7 @@ class StringTester(unittest.TestCase):
     )
 
     def test_str(self):
-        r = BeatRecord()
-        r.deserialize(decode(self.report, "hex"))
+        r = BeatRecord.deserialize(decode(self.report, "hex"))
 
         self.assertEqual(self.report, str(r))
 
@@ -319,8 +296,7 @@ class NestedPacketTester(unittest.TestCase):
         self.assertEqual(packet.serialize(), decode(self.p1, "hex"))
 
     def test_nested_packet_deserialize(self):
-        packet = ArrayPacket()
-        packet.deserialize(decode(self.p0, "hex"))
+        packet = ArrayPacket.deserialize(decode(self.p0, "hex"))
         self.assertEqual(packet.header, 0xF1)
         self.assertEqual(
             list(packet.data),
@@ -333,8 +309,7 @@ class NestedPacketTester(unittest.TestCase):
         )
 
         # Test rgular nested packet
-        packet = AnotherPacket()
-        packet.deserialize(decode(self.p1, "hex"))
+        packet = AnotherPacket.deserialize(decode(self.p1, "hex"))
         self.assertEqual(packet.header, 0xD0)
         self.assertEqual(packet.timestamp, 0x12345678)
         self.assertEqual(packet.origin, PointStruct(x=1, y=1))
@@ -392,9 +367,8 @@ class InvalidInputTester(unittest.TestCase):
     )
 
     def test_invalid_length_input(self):
-        r = BeatRecord()
         with self.assertRaises(DeserializeError):
-            r.deserialize(decode(self.p, "hex"))
+            BeatRecord.deserialize(decode(self.p, "hex"))
 
 
 class ByteStringTester(unittest.TestCase):
@@ -403,13 +377,11 @@ class ByteStringTester(unittest.TestCase):
 
     def test_variable_length_bytestring(self):
         class VarLenPacket(SerdepaPacket):
-            _fields_ = (
-                ("hdr", nx_uint16),
-                ("tail", ByteString())
-            )
-        packet = VarLenPacket()
+            hdr = nx_uint16()
+            tail = ByteString()
+
         try:
-            packet.deserialize(decode(self.p1, "hex"))
+            packet = VarLenPacket.deserialize(decode(self.p1, "hex"))
         except DeserializeError as e:
             self.fail("Variable length ByteString deserializing failed with message: {}".format(e))
         self.assertTrue(isinstance(packet.tail, ByteString))
@@ -419,25 +391,21 @@ class ByteStringTester(unittest.TestCase):
 
     def test_fixed_length_bytestring(self):
         class FixLenPacket(SerdepaPacket):
-            _fields_ = (
-                ('hdr', nx_uint8),
-                ('tail', ByteString(6))
-            )
-        packet = FixLenPacket()
-        packet.deserialize(decode(self.p2, "hex"))
+            hdr = nx_uint8()
+            tail = ByteString(6)
+
+        packet = FixLenPacket.deserialize(decode(self.p2, "hex"))
         self.assertEqual(packet.hdr, 0x03)
         self.assertEqual(packet.tail, 0x05E8F02398A9)
         self.assertEqual(packet.serialize(), decode(self.p2, "hex"))
 
     def test_length_object_defined_length_bytestring(self):
         class LenObjLenPacket(SerdepaPacket):
-            _fields_ = (
-                ('hdr', nx_uint8),
-                ('length', Length(nx_uint8, 'tail')),
-                ('tail', ByteString())
-            )
-        packet = LenObjLenPacket()
-        packet.deserialize(decode(self.p2, "hex"))
+            hdr = nx_uint8()
+            length = Length(nx_uint8, 'tail')
+            tail = ByteString()
+
+        packet = LenObjLenPacket.deserialize(decode(self.p2, "hex"))
         self.assertEqual(packet.hdr, 0x03)
         self.assertEqual(packet.length, 5)
         self.assertEqual(packet.tail, 0xE8F02398A9)
@@ -449,49 +417,38 @@ class BigTypeTester(unittest.TestCase):
 
     def test_nx_uint64(self):
         class Packet(SerdepaPacket):
-            _fields_ = (
-                ('header', nx_uint8),
-                ('guid', nx_uint64)
-            )
+            header = nx_uint8()
+            guid = nx_uint64()
 
-        packet = Packet()
-        packet.deserialize(decode(self.p1, "hex"))
+        packet = Packet.deserialize(decode(self.p1, "hex"))
+        print(packet.header.__get__)
         self.assertEqual(packet.header, 0x11)
         self.assertEqual(packet.guid, 0xFF00FF00FF00FF00)
 
     def test_nx_int64(self):
         class Packet(SerdepaPacket):
-            _fields_ = (
-                ('header', nx_uint8),
-                ('guid', nx_int64)
-            )
+            header = nx_uint8()
+            guid = nx_int64()
 
-        packet = Packet()
-        packet.deserialize(decode(self.p1, "hex"))
+        packet = Packet.deserialize(decode(self.p1, "hex"))
         self.assertEqual(packet.header, 0x11)
         self.assertEqual(packet.guid, 0-0x00FF00FF00FF00FF-1)
 
     def test_uint64(self):
         class Packet(SerdepaPacket):
-            _fields_ = (
-                ('header', nx_uint8),
-                ('guid', uint64)
-            )
+            header = nx_uint8()
+            guid = uint64()
 
-        packet = Packet()
-        packet.deserialize(decode(self.p1, "hex"))
+        packet = Packet.deserialize(decode(self.p1, "hex"))
         self.assertEqual(packet.header, 0x11)
         self.assertEqual(packet.guid, 0x00FF00FF00FF00FF)
 
     def test_int64(self):
         class Packet(SerdepaPacket):
-            _fields_ = (
-                ('header', nx_uint8),
-                ('guid', int64)
-            )
+            header = nx_uint8()
+            guid = int64()
 
-        packet = Packet()
-        packet.deserialize(decode(self.p1, "hex"))
+        packet = Packet.deserialize(decode(self.p1, "hex"))
         self.assertEqual(packet.header, 0x11)
         self.assertEqual(packet.guid, 0x00FF00FF00FF00FF)
 
@@ -504,26 +461,22 @@ class SubstructTester(unittest.TestCase):
 
     def setUp(self):
         class Inner(SerdepaPacket):
-            _fields_ = (
-                ('first', nx_uint8, 0),
-                ('second', nx_uint8),
-            )
+            first = nx_uint8(default=0)
+            second = nx_uint8()
 
         class Outer(SerdepaPacket):
-            _fields_ = (
-                ('inner', Inner),
-                ('tail', nx_uint8),
-            )
+            inner = Inner()
+            tail = nx_uint8()
+
         self.Inner = Inner
         self.Outer = Outer
         self.packet = Outer()
-        self.inner = Inner()
 
     def test_substruct_deserialize(self):
-        self.packet.deserialize(self.input)
-        self.assertEqual(self.packet.inner.first, 1)
-        self.assertEqual(self.packet.inner.second, 2)
-        self.assertEqual(self.packet.tail, 3)
+        packet = self.Outer.deserialize(self.input)
+        self.assertEqual(packet.inner.first, 1)
+        self.assertEqual(packet.inner.second, 2)
+        self.assertEqual(packet.tail, 3)
 
     def test_substruct_serialize(self):
         self.packet.inner.first = 1
@@ -547,18 +500,15 @@ class InvalidLengthTester(unittest.TestCase):
     )
 
     class TestPacket(SerdepaPacket):
-        _fields_ = (
-            ('header', nx_uint32),
-            ('length', nx_uint8),
-            ('values', nx_uint8)
-        )
+        header = nx_uint32()
+        length = nx_uint8()
+        values = nx_uint8()
 
     def test_deserialize(self):
-        packet = self.TestPacket()
         with self.assertRaises(DeserializeError):
-            packet.deserialize(self.short_input)
+            self.TestPacket.deserialize(self.short_input)
         with self.assertRaises(DeserializeError):
-            packet.deserialize(self.long_input)
+            self.TestPacket.deserialize(self.long_input)
 
 
 if __name__ == '__main__':
