@@ -19,8 +19,8 @@ class DeserializeError(SerdepaError):
     pass
 
 
-class SerializeError(SerdepaError):
+class ValidationError(SerdepaError):
     """
-    Error that is raised when serialization fails.
+    Error that is raised when assigning a value to a parameter fails.
     """
     pass

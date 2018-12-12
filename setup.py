@@ -11,5 +11,5 @@ setup(name='serdepa',
       packages=['serdepa'],
       install_requires=['six'],
       test_suite='nose.collector',
-      tests_require=['nose'],
+      tests_require=['nose', 'mock'],
       zip_safe=False)
